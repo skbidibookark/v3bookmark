@@ -1,0 +1,165 @@
+javascript:(function(){
+if(document.getElementById('__dbg')) return;
+
+function create(t, p, s) {
+    var e = document.createElement(t);
+    if(p) for(var k in p) if(Object.prototype.hasOwnProperty.call(p,k)) e[k] = p[k];
+    if(s) for(var k2 in s) if(Object.prototype.hasOwnProperty.call(s,k2)) e.style[k2] = s[k2];
+    return e;
+}
+
+function append(parent){
+    for(var i=1; i<arguments.length; i++) parent.appendChild(arguments[i]);
+    return parent;
+}
+
+var overlay = create('div', {}, {position:'fixed', inset:'0', background:'rgba(0,0,0,0.55)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:2147483647});
+document.body.appendChild(overlay);
+
+var loginBox = create('div', {}, {width:'440px', padding:'22px', borderRadius:'12px', background:'linear-gradient(180deg,#0f1720,#0b1220)', color:'#cfeaff', boxShadow:'0 30px 80px rgba(0,0,0,.7)', fontFamily:'Segoe UI,Consolas,monospace', display:'flex', flexDirection:'column', alignItems:'center', gap:'10px', transform:'scale(0)', transition:'transform .16s'});
+overlay.appendChild(loginBox);
+
+setTimeout(function(){loginBox.style.transform='scale(1)';}, 80);
+
+append(loginBox, 
+    create('div', {innerText:'Login to JS Playground'}, {fontSize:'18px', fontWeight:700}),
+    create('input', {id:'__dbg_user', placeholder:'Username'}, {width:'86%', padding:'8px 10px', borderRadius:'6px', border:'none', outline:'none', fontSize:'14px'}),
+    create('input', {id:'__dbg_pass', type:'password', placeholder:'Password'}, {width:'86%', padding:'8px 10px', borderRadius:'6px', border:'none', outline:'none', fontSize:'14px'})
+);
+
+var loginBtn = create('button', {innerText:'Login'}, {padding:'8px 16px', borderRadius:'8px', background:'#0ea5ff', color:'#021826', border:'none', cursor:'pointer', fontWeight:700});
+var loginErr = create('div', {}, {height:'18px', color:'#ff7b7b', fontSize:'13px'});
+
+loginBox.appendChild(loginBtn);
+loginBox.appendChild(loginErr);
+
+var presets = [
+    {name:'Invert Colors', code:"document.body.style.filter='invert(1)';"},
+    {name:'Flip Text', code:"document.querySelectorAll('*').forEach(function(el){try{if(el.childElementCount===0&&el.innerText)el.innerText=el.innerText.split('').reverse().join('')}catch(e){}});"},
+    {name:'Confetti', code:"(function(){var c=document.createElement('canvas');c.style.position='fixed';c.style.left=0;c.style.top=0;c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);var ctx=c.getContext('2d');var a=[];for(var i=0;i<200;i++){a.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*6+2,dx:(Math.random()-0.5)*2,dy:Math.random()*3+1,color:'hsl('+Math.floor(Math.random()*360)+',90%,60%)'})}function d(){ctx.clearRect(0,0,c.width,c.height);a.forEach(function(p){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,2*Math.PI);ctx.fill();p.x+=p.dx;p.y+=p.dy;if(p.y>c.height){p.y=0;p.x=Math.random()*c.width}});requestAnimationFrame(d)}d();})();"},
+    {name:'Alert Spammer', code:"(function(){var n=0;var t=setInterval(function(){alert('You got pranked!');n++;if(n>5)clearInterval(t)},700);}());"},
+    {name:'Image Replace', code:"document.querySelectorAll('img').forEach(function(i){try{i.src='https://i.imgur.com/3P6GfKQ.png'}catch(e){}});"},
+    {name:'Gradient Background', code:"document.body.style.background='linear-gradient(90deg,#ff4f4f,#00a8ff)';"},
+    {name:'Rainbow BG (animated)', code:"(function(){var i=0;window.__dbg_rainbow_int&&clearInterval(window.__dbg_rainbow_int);window.__dbg_rainbow_int=setInterval(function(){document.body.style.background='hsl('+i+',80%,60%)';i=(i+5)%360},80);})();"},
+    {name:'Show Page Info', code:"alert('URL: '+location.href+'\\nTitle: '+document.title);"},
+    {name:'Highlight Links', code:"document.querySelectorAll('a').forEach(function(a){a.style.background='yellow';a.style.color='#000'});"},
+    {name:'Scroll To Top', code:"window.scrollTo({top:0,behavior:'smooth'});"},
+    {name:'Scroll To Bottom', code:"window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});"},
+    {name:'Dark Mode Toggle', code:"document.body.style.filter=document.body.style.filter==='invert(1)'?'invert(0)':'invert(1)';"},
+    {name:'Random Quote', code:"alert('Believe you can and you\\'re halfway there.');"},
+    {name:'Fake BSOD', code:"(function(){if(document.getElementById('__fake_bsod'))return;var p=document.createElement('div');p.id='__fake_bsod';p.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;background:#012169;color:#fff;z-index:2147483647;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:40px;font-family:Segoe UI,Roboto,monospace';var t=document.createElement('div');t.style.fontSize='34px';t.style.fontWeight=800;t.style.marginBottom='12px';t.textContent='A problem has been detected and Windows has been shut down to prevent damage to your computer.';p.appendChild(t);var s=document.createElement('div');s.style.fontSize='16px';s.style.marginBottom='14px';s.textContent='The system encountered an unexpected error. Please contact the system administrator.';p.appendChild(s);var code=document.createElement('div');code.style.fontFamily='monospace';code.style.fontSize='14px';code.style.background='rgba(0,0,0,.12)';code.style.padding='12px';code.style.borderRadius='6px';code.textContent='*** STOP: 0x0000007B (0xFFFFF880009A9928, 0xFFFFFFFFC0000034)';p.appendChild(code);var btn=document.createElement('button');btn.textContent='Close Fake BSOD';btn.style.marginTop='18px';btn.onclick=function(){try{p.remove();}catch(e){}};p.appendChild(btn);document.body.appendChild(p);})();"}
+];
+
+loginBtn.onclick = function(){
+    var u = document.getElementById('__dbg_user').value.trim();
+    var p = document.getElementById('__dbg_pass').value.trim();
+    if(u === 'JSexecutor' && p === 'JSplayground'){
+        try{ overlay.parentNode.removeChild(overlay); } catch(e){}
+        openEditor();
+    } else {
+        loginErr.innerText = 'Incorrect username or password';
+    }
+};
+
+function openEditor(){
+    if(document.getElementById('__dbg')) return;
+
+    var panel = create('div', {id:'__dbg'}, {position:'fixed', left:'60px', top:'60px', width:'920px', height:'660px', background:'linear-gradient(180deg,#0d101f,#1b1f32)', color:'#cfeaff', borderRadius:'12px', boxShadow:'0 40px 120px rgba(0,0,0,.7)', display:'flex', flexDirection:'column', fontFamily:'Segoe UI,Consolas,monospace', zIndex:2147483647, overflow:'hidden', transform:'scale(0)', transition:'transform .28s ease'});
+    document.body.appendChild(panel);
+    setTimeout(function(){panel.style.transform='scale(1)';}, 60);
+
+    var header = create('div', {}, {padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'move', background:'linear-gradient(90deg,#071024,#0b1220)'});
+    var title = create('div', {innerText:'JS Playground'}, {fontWeight:700, fontSize:'16px'});
+    var controlsWrap = create('div', {});
+    
+    var collapse = create('button', {innerText:''}, {marginRight:'8px', cursor:'pointer', border:'none', background:'transparent', color:'#cfeaff', fontSize:'18px'});
+    var closeBtn = create('button', {innerText:'Close'}, {cursor:'pointer', border:'none', background:'#ff5c5c', color:'#071014', padding:'6px 10px', borderRadius:'8px', fontWeight:700});
+    
+    controlsWrap.appendChild(collapse);
+    controlsWrap.appendChild(closeBtn);
+    header.appendChild(title);
+    header.appendChild(controlsWrap);
+    panel.appendChild(header);
+
+    var loading = create('div', {innerText:'Loading Playground...'}, {position:'absolute', left:0, top:0, width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'20px', background:'linear-gradient(180deg,rgba(2,6,23,.9),rgba(2,6,23,.6))', zIndex:10, transition:'opacity .36s'});
+    panel.appendChild(loading);
+    setTimeout(function(){loading.style.opacity='0'; setTimeout(function(){try{loading.parentNode.removeChild(loading)}catch(e){}},360)}, 900);
+
+    var ta = create('textarea', {value:'// put your javascript here'}, {flex:1, margin:'12px 20px', padding:'14px', borderRadius:'8px', border:'none', outline:'none', background:'#07111a', color:'#cfeaff', fontSize:'14px', resize:'none'});
+    panel.appendChild(ta);
+
+    var controls = create('div', {}, {display:'flex', alignItems:'center', gap:'10px', padding:'10px 18px', background:'#0b1118'});
+    panel.appendChild(controls);
+
+    var sel = create('select', {}, {flex:1, padding:'8px 10px', borderRadius:'8px', background:'#053a66', color:'#fff', border:'none'});
+    for(var i=0;i<presets.length;i++){
+        var op = document.createElement('option');
+        op.value = i;
+        op.textContent = presets[i].name;
+        sel.appendChild(op);
+    }
+
+    var loadBtn = create('button', {innerText:'Load'}, {padding:'8px 12px', borderRadius:'8px', background:'#184e8b', color:'#fff', border:'none', cursor:'pointer', fontWeight:700});
+    var runBtn = create('button', {innerText:'Run'}, {padding:'8px 12px', borderRadius:'8px', background:'#00a8ff', color:'#042027', border:'none', cursor:'pointer', fontWeight:800});
+    var clearBtn = create('button', {innerText:'Clear'}, {padding:'8px 12px', borderRadius:'8px', background:'#2b2b2b', color:'#fff', border:'none', cursor:'pointer'});
+
+    controls.appendChild(sel);
+    controls.appendChild(loadBtn);
+    controls.appendChild(runBtn);
+    controls.appendChild(clearBtn);
+
+    var out = create('div', {}, {height:'180px', background:'#06060a', color:'#9ef2b6', padding:'12px', overflowY:'auto', fontSize:'13px', borderTop:'1px solid rgba(255,255,255,0.03)'});
+    panel.appendChild(out);
+
+    loadBtn.onclick = function(){
+        var idx = Number(sel.value);
+        if(!isNaN(idx) && presets[idx]){
+            try{ta.value = presets[idx].code; out.textContent += '[Preset loaded]\\n';} 
+            catch(e){out.textContent += '[ERR] preset load failed\\n';}
+        }
+    };
+
+    runBtn.onclick = function(){ 
+        out.textContent=''; 
+        try{ new Function(ta.value)(); out.textContent+='[OK] executed\\n'; } 
+        catch(errr){ out.textContent+='[ERR] '+errr.message+'\\n'; } 
+    };
+
+    clearBtn.onclick = function(){ ta.value=''; out.textContent=''; };
+    closeBtn.onclick = function(){ 
+        panel.style.transition='transform .28s,opacity .28s'; 
+        panel.style.transform='scale(.28) rotate(-8deg)'; 
+        panel.style.opacity='0'; 
+        setTimeout(function(){try{panel.parentNode.removeChild(panel)}catch(e){}},320);
+    };
+
+    collapse.onclick = function(){
+        var hidden = ta.style.display!=='none';
+        ta.style.display = hidden?'none':'block';
+        controls.style.display = hidden?'none':'flex';
+        out.style.display = hidden?'none':'block';
+        collapse.innerText = hidden?'+' :'';
+    };
+
+    (function makeDraggable(el,hdl){
+        var ox=0,oy=0,down=false;
+        hdl.addEventListener('mousedown',function(ev){down=true;ox=ev.clientX-el.offsetLeft;oy=ev.clientY-el.offsetTop;document.body.style.userSelect='none'});
+        document.addEventListener('mousemove',function(ev){if(!down)return; el.style.left=(ev.clientX-ox)+'px'; el.style.top=(ev.clientY-oy)+'px';});
+        document.addEventListener('mouseup',function(){down=false;document.body.style.userSelect='';});
+    })(panel,header);
+
+    var resHandle = create('div', {}, {width:'18px', height:'18px', position:'absolute', right:'10px', bottom:'10px', cursor:'se-resize', background:'rgba(255,255,255,0.04)', borderRadius:'6px'});
+    panel.appendChild(resHandle);
+
+    resHandle.addEventListener('mousedown', function(ev){
+        ev.preventDefault();
+        var sx=ev.clientX, sy=ev.clientY, sw=panel.offsetWidth, sh=panel.offsetHeight;
+        function mm(e){ panel.style.width=(sw+(e.clientX-sx))+'px'; panel.style.height=(sh+(e.clientY-sy))+'px'; }
+        function mu(){ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); }
+        document.addEventListener('mousemove', mm);
+        document.addEventListener('mouseup', mu);
+    });
+
+    ta.focus();
+}
+})();
